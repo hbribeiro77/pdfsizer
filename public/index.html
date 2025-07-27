@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        .slider-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .slider-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+        }
+        .size-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .size-description {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
+        .quick-sizes {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .quick-btn {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .quick-btn:hover {
+            background-color: #e9ecef;
+            border-color: #007bff;
+        }
+        .quick-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .progress-percentage {
+            font-size: 12px;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerador de PDF</h1>
+        
+        <div class="form-group">
+            <label for="sizeSlider">Tamanho do PDF:</label>
+            <div class="slider-container">
+                <input 
+                    type="range" 
+                    id="sizeSlider" 
+                    class="slider"
+                    min="0" 
+                    max="20" 
+                    step="0.1" 
+                    value="1.0"
+                >
+                <div class="slider-info">
+                    <div class="size-value" id="sizeValue">1.0 MB</div>
+                    <div class="size-description" id="sizeDescription">Tamanho pequeno</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-sizes">
+            <div class="quick-btn" onclick="setSize(0.5)">0.5 MB</div>
+            <div class="quick-btn active" onclick="setSize(1.0)">1.0 MB</div>
+            <div class="quick-btn" onclick="setSize(5.0)">5.0 MB</div>
+            <div class="quick-btn" onclick="setSize(10.0)">10.0 MB</div>
+        </div>
+
+        <button id="generateBtn" onclick="generatePDF()">Gerar PDF</button>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-text" id="progressText">Gerando PDF...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div class="progress-percentage" id="progressPercentage">Processando...</div>
+        </div>
+        
+        <div id="result"></div>
+        
+        <div class="info">
+            <p><strong>Como funciona:</strong></p>
+            <p>• Deslize para escolher o tamanho desejado (0-20 MB)</p>
+            <p>• O sistema gera um PDF com o tamanho exato</p>
+            <p>• Ideal para testar limites de upload</p>
+        </div>
+    </div>
+
+    <script>
+        const slider = document.getElementById('sizeSlider');
+        const sizeValue = document.getElementById('sizeValue');
+        const sizeDescription = document.getElementById('sizeDescription');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercentage = document.getElementById('progressPercentage');
+
+        function updateSizeDisplay(size) {
+            sizeValue.textContent = `${size} MB`;
+            
+            // Atualizar descrição baseada no tamanho
+            let description = '';
+            if (size === 0) {
+                description = 'PDF vazio';
+            } else if (size < 1) {
+                description = 'Testes básicos';
+            } else if (size < 5) {
+                description = 'Testes gerais';
+            } else if (size < 10) {
+                description = 'Limites médios';
+            } else if (size < 15) {
+                description = 'Limites altos';
+            } else {
+                description = 'Limites extremos';
+            }
+            sizeDescription.textContent = description;
+        }
+
+        function setSize(size) {
+            slider.value = size;
+            updateSizeDisplay(size);
+            
+            // Atualizar botões ativos
+            document.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function showProgress() {
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Gerando PDF...';
+            progressPercentage.textContent = 'Processando...';
+            
+            // Animação de progresso
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressFill.style.width = `${progress}%`;
+                progressPercentage.textContent = `${Math.round(progress)}%`;
+            }, 200);
+            
+            return interval;
+        }
+
+        // Event listener para o slider
+        slider.addEventListener('input', function() {
+            const size = parseFloat(this.value);
+            updateSizeDisplay(size);
+            
+            // Remover classe active de todos os botões
+            document.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        });
+
+        async function generatePDF() {
+            const btn = document.getElementById('generateBtn');
+            const resultDiv = document.getElementById('result');
+            const sizeMB = parseFloat(slider.value);
+            
+            if (sizeMB === 0) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p>❌ Por favor, selecione um tamanho maior que 0 MB</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = 'Gerando PDF...';
+            resultDiv.innerHTML = '';
+            
+            const progressInterval = showProgress();
+
+            try {
+                const response = await fetch('/api/generate-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sizeMB: sizeMB,
+                        tolerance: 1024 * 100, // 100KB tolerância
+                        maxAttempts: 15
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erro na geração do PDF');
+                }
+
+                const blob = await response.blob();
+                
+                // Finalizar progresso
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                progressPercentage.textContent = '100%';
+                progressText.textContent = 'PDF gerado com sucesso!';
+                
+                // Criar link para download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pdf-${sizeMB}mb-${Date.now()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                const accuracy = ((1 - Math.abs(blob.size - (sizeMB * 1024 * 1024)) / (sizeMB * 1024 * 1024)) * 100).toFixed(2);
+
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <p>✅ PDF gerado com sucesso!</p>
+                        <p>Tamanho: ${(blob.size / (1024 * 1024)).toFixed(2)}MB (${blob.size} bytes)</p>
+                        <p>Precisão: ${accuracy}%</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Erro:', error);
+                clearInterval(progressInterval);
+                progressContainer.style.display = 'none';
+                
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p>❌ Erro: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Gerar PDF';
+                
+                // Esconder progresso após 2 segundos
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // Inicializar display
+        updateSizeDisplay(1.0);
+    </script>
+</body>
+</html> 
