@@ -13,7 +13,7 @@ if (typeof global.TextDecoder === 'undefined') {
 const PDFDocument = require('pdfkit');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware para JSON
 app.use(express.json());
@@ -179,6 +179,18 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+// Rota de health check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    uptime: process.uptime()
+  });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor rodando em http://0.0.0.0:${PORT}`);
+  console.log(`📊 Health check disponível em http://0.0.0.0:${PORT}/health`);
+  console.log(`📄 PDFSizer - Gerador de PDFs com tamanho preciso`);
 }); 
